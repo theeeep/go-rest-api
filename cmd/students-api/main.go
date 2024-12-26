@@ -30,10 +30,12 @@ func main() {
 
 	fmt.Printf("🌐 Server started on %s\n", cfg.HTTPServer.Addr)
 
-	err := server.ListenAndServe()
+	go func() {
+		err := server.ListenAndServe()
 
-	if err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+		if err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+	}() // () --> anonymous function means it will be executed immediately
 
 }
