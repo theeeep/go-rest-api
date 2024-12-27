@@ -3,6 +3,7 @@ package student
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 
 func New() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("Creating a new student")
 
 		var student types.Student
 
@@ -21,11 +23,16 @@ func New() http.HandlerFunc {
 		if errors.Is(err, io.EOF) {
 			slog.Error("No student data provided")
 			http.Error(w, "No student data provided", http.StatusBadRequest)
-			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("No student data provided")))
 			return
 		}
 
-		slog.Info("Creating a new student")
+		if err != nil {
+			slog.Error("Failed to decode student data", slog.String("error", err.Error()))
+			http.Error(w, "Failed to decode student data", http.StatusBadRequest)
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			return
+		}
 
 		response.WriteJson(w, http.StatusCreated, map[string]string{"message": "Successfully created a new student"})
 	}
