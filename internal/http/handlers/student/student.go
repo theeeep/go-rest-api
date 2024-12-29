@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/theeeep/go-rest-api/internal/types"
 	"github.com/theeeep/go-rest-api/internal/utils/response"
 )
@@ -31,6 +32,17 @@ func New() http.HandlerFunc {
 			slog.Error("Failed to decode student data", slog.String("error", err.Error()))
 			http.Error(w, "Failed to decode student data", http.StatusBadRequest)
 			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			return
+		}
+
+		// Request validation
+		if err := validator.New().Struct(student); err != nil {
+
+			validateErrs := err.(validator.ValidationErrors)
+
+			slog.Error("Invalid student data", slog.String("error", err.Error()))
+
+			response.WriteJson(w, http.StatusBadRequest, response.ValidationError(validateErrs))
 			return
 		}
 
