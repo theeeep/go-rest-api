@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -12,13 +13,19 @@ import (
 
 	"github.com/theeeep/go-rest-api/internal/config"
 	"github.com/theeeep/go-rest-api/internal/http/handlers/student"
+	"github.com/theeeep/go-rest-api/internal/storage/sqlite"
 )
 
 func main() {
 	// Load Config
 	cfg := config.MustLoad()
 
-	// db setup
+	// setup storage / db
+	_, err := sqlite.New(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	slog.Info("Storage initialized", slog.String("env", cfg.Env), slog.String("version", "1.0.0"))
 
 	// setup router
 	router := http.NewServeMux()
@@ -26,7 +33,6 @@ func main() {
 	router.HandleFunc("POST /api/v1/students", student.New())
 
 	// setup server
-
 	server := http.Server{
 		Addr:    cfg.Addr,
 		Handler: router,
