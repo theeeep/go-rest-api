@@ -21,7 +21,7 @@ func main() {
 	cfg := config.MustLoad()
 
 	// setup storage / db
-	_, err := sqlite.New(cfg)
+	storage, err := sqlite.New(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,7 +30,7 @@ func main() {
 	// setup router
 	router := http.NewServeMux()
 
-	router.HandleFunc("POST /api/v1/students", student.New())
+	router.HandleFunc("POST /api/v1/students", student.New(storage))
 
 	// setup server
 	server := http.Server{

@@ -9,11 +9,12 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/theeeep/go-rest-api/internal/storage"
 	"github.com/theeeep/go-rest-api/internal/types"
 	"github.com/theeeep/go-rest-api/internal/utils/response"
 )
 
-func New() http.HandlerFunc {
+func New(storage storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Creating a new student")
 
@@ -46,6 +47,21 @@ func New() http.HandlerFunc {
 			return
 		}
 
-		response.WriteJson(w, http.StatusCreated, map[string]string{"message": "Successfully created a new student"})
+		// Save student to storage
+		lastId, err := storage.CreateStudent(
+			student.Name,
+			student.Email,
+			student.Age,
+		)
+
+		slog.Info("Successfully created a new student", slog.Int64("id", lastId))
+
+		if err != nil {
+			slog.Error("Failed to save student", slog.String("error", err.Error()))
+			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
+			return
+		}
+
+		response.WriteJson(w, http.StatusCreated, map[string]string{"id": fmt.Sprintf("Successfully created a new student: %d", lastId)})
 	}
 }
