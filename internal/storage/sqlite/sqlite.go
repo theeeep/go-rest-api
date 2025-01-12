@@ -91,3 +91,36 @@ func (s *Sqlite) GetStudentByID(id int64) (types.Student, error) {
 
 	return student, nil
 }
+
+func (s *Sqlite) GetStudents() ([]types.Student, error) {
+
+	stmt, err := s.Db.Prepare("SELECT id, name, email, age FROM students")
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer stmt.Close()
+
+	// Execute the query and get the rows.
+	rows, err := stmt.Query()
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var students []types.Student
+
+	// Iterate over the rows and scan the values into the Student struct.
+	for rows.Next() {
+		var student types.Student
+		err = rows.Scan(&student.Id, &student.Name, &student.Email, &student.Age)
+		if err != nil {
+			return nil, err
+		}
+		// Append the student to the slice.
+		students = append(students, student)
+	}
+	return students, nil
+}
